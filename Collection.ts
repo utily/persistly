@@ -3,6 +3,9 @@ import { Document } from "./Document"
 
 export class Collection<T extends Document> {
 	constructor(private backend: Promise<mongo.Collection>, private shard?: string) { }
+	async get(filter: object): Promise<T>{
+		return mapId<T>((await this.backend).findOne(filter))
+	}
 	async list(filter?: object): Promise<T[]>{
 		return (await this.backend).find(filter).map<T>(mapId).toArray()
 	}
