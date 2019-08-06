@@ -45,16 +45,16 @@
  },
  "dependencies": {
   "@types/mongodb": "^3.1.31",
-  "authly": "0.0.24",
+  "authly": "0.0.25",
   "mongodb": "^3.3.0-beta2"
  },
  "devDependencies": {
-  "@types/jest": "^24.0.16",
+  "@types/jest": "^24.0.17",
   "@types/node": "^12.6.9",
   "babel-core": "^6.26.3",
   "babel-jest": "^24.8.0",
   "jest": "^24",
-  "mongodb-memory-server": "^5.1.9",
+  "mongodb-memory-server": "^5.1.10",
   "ts-jest": "^24.0.2",
   "tslint": "^5.18.0",
   "typescript": "^3.5.3",
