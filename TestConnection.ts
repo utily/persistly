@@ -1,4 +1,3 @@
-import * as mongo from "mongodb"
 // tslint:disable-next-line: no-implicit-dependencies
 import { MongoMemoryServer } from "mongodb-memory-server"
 import { Connection } from "./Connection"
