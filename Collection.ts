@@ -1,52 +1,83 @@
 import * as mongo from "mongodb"
+import * as authly from "authly"
 import { Document } from "./Document"
 
 export class Collection<T extends Document> {
-	constructor(private backend: Promise<mongo.Collection>, private shard?: string) { }
-	async get(filter: object): Promise<T>{
-		return mapId<T>((await this.backend).findOne(filter))
+	private hexadecmialIdLength: number
+	constructor(private backend: Promise<mongo.Collection>, readonly shard?: string, readonly idLength: 4 | 8 | 12 | 16 = 16) {
+		this.hexadecmialIdLength = idLength * 3 / 2
+	}
+	async get(filter: object & any): Promise<T | undefined> {
+		if (Document.is(filter))
+			filter = this.fromDocument(filter)
+		return this.toDocument(await (await this.backend).findOne(filter))
 	}
 	async list(filter?: object): Promise<T[]>{
-		return (await this.backend).find(filter).map<T>(mapId).toArray()
+		if (Document.is(filter))
+			filter = this.fromDocument(filter)
+		return (await this.backend).find(filter).map<T>(this.toDocument.bind(this)).toArray()
 	}
 	async create(document: T): Promise<T>
 	async create(documents: T[]): Promise<T[]>
 	async create(documents: T | T[]): Promise<T | T[]> {
 		let result: T | T[]
 		if (Array.isArray(documents)) {
-			const r = await (await this.backend).insertMany(documents)
-			result = await ((await this.backend).find({ _id: { $in: Object.values(r.insertedIds) } })).toArray()
+			const r = await (await this.backend).insertMany(documents.map(this.fromDocument.bind(this)))
+			result = await ((await this.backend).find({ _id: { $in: Object.values(r.insertedIds) } })).map(d => this.toDocument(d)).toArray()
 		} else {
-			const r = await (await this.backend).insertOne(documents)
-			result = await (await this.backend).find(r.insertedId).next() || undefined
+			const r = await (await this.backend).insertOne(this.fromDocument(documents))
+			result = this.toDocument(await (await this.backend).find(r.insertedId).next() || undefined)
 		}
 		return result
 	}
-	async update(document: Partial<T>): Promise<T>
-	async update(documents: Partial<T>[]): Promise<T[]>
-	async update(documents: Partial<T> | Partial<T>[]): Promise<T | T[]> {
-		let result: T | T[]
-		if (Array.isArray(documents)) {
-			let updated: any
-			await Promise.all(documents.map(async document => {
-				updated = await this.update(document)
-			}))
-			result = updated || []
-		} else {
-			const filter: { _id: mongo.ObjectID, [property: string]: string | undefined | mongo.ObjectID } = { _id: new mongo.ObjectID(documents.id) }
+	async update(document: Partial<T> & Document): Promise<T | undefined>
+	async update(documents: (Partial<T> & Document)[]): Promise<T[]>
+	async update(documents: Partial<T> & Document | (Partial<T> & Document)[]): Promise<T | undefined | T[]> {
+		let result: T | undefined | T[]
+		if (Array.isArray(documents))
+			result = (await Promise.all(documents.map(document => this.update(document)))).filter(r => r != undefined) as T[]
+		else {
+			const filter: { _id: mongo.ObjectID, [property: string]: string | undefined | mongo.ObjectID } = this.fromDocument({ id: documents.id })
 			delete documents.id
-			if (this.shard){
+			if (this.shard) {
 				filter[this.shard] = (documents as unknown as { [property: string]: string | undefined })[this.shard]
 				delete (documents as unknown as { [property: string]: string | undefined })[this.shard]
 			}
-			const updated = await (await this.backend).findOneAndUpdate(filter, { $addToSet: documents }, { returnOriginal: false } )
-			result = updated.ok = updated.value || []
+			const push: { [field: string]: { $each: any[] } } = {}
+			const set: { [field: string]: any } = {}
+			for (const field in documents)
+				if (documents.hasOwnProperty(field)) {
+					const value = (documents as { [field: string]: any | any[] })[field]
+					if (Array.isArray(value))
+						push[field] = { $each: value }
+					else
+						set[field] = value
+				}
+			const update: { $push?: { [field: string]: { $each: any[] } }, $set?: { [field: string]: any } } = {}
+			if (Object.entries(push).length > 0)
+				update.$push = push
+			if (Object.entries(set).length > 0)
+				update.$set = set
+			const updated = await (await this.backend).findOneAndUpdate(filter, update, { returnOriginal: false })
+			result = updated.ok ? this.toDocument(updated.value) : undefined
 		}
 		return result
 	}
-}
-function mapId<T extends Document>(document: any): T {
-	const result = { ...document, id: document._id }
-	delete(result._id)
-	return result
+	private toDocument(document: { _id: mongo.ObjectID }): T
+	private toDocument(document: { _id: mongo.ObjectID } | undefined | null): T | undefined
+	private toDocument(document: { _id: mongo.ObjectID } | undefined | null): T | undefined {
+		let result: T | undefined
+		if (document) {
+			const id = authly.Identifier.fromHexadecimal(document._id.toHexString().slice(24 - this.hexadecmialIdLength))
+			delete(document._id)
+			result = { ...document, id } as any
+		}
+		return result
+	}
+	private fromDocument(document: Document): any {
+		const id = authly.Identifier.toHexadecimal(document.id).padStart(24, "0").slice(0, 24)
+		const result = { ...document, _id: new mongo.ObjectID(id) }
+		delete(result.id)
+		return result
+	}
 }
