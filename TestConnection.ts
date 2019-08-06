@@ -7,7 +7,7 @@ jest.setTimeout(60000)
 
 export class TestConnection extends Connection {
 	constructor(private server: MongoMemoryServer) {
-		super(server.getConnectionString(), server.getDbName())
+		super(server.getConnectionString())
 	}
 	async close(): Promise<void> {
 		await super.close()
