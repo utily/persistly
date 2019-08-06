@@ -4,29 +4,29 @@ import { Document } from "./Document"
 
 export class Collection<T extends Document> {
 	private hexadecmialIdLength: number
-	constructor(private backend: Promise<mongo.Collection>, readonly shard?: string, readonly idLength: 4 | 8 | 12 | 16 = 16) {
+	constructor(private backend: mongo.Collection, readonly shard?: string, readonly idLength: 4 | 8 | 12 | 16 = 16) {
 		this.hexadecmialIdLength = idLength * 3 / 2
 	}
 	async get(filter: object & any): Promise<T | undefined> {
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
-		return this.toDocument(await (await this.backend).findOne(filter))
+		return this.toDocument(await this.backend.findOne(filter))
 	}
 	async list(filter?: object): Promise<T[]>{
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
-		return (await this.backend).find(filter).map<T>(this.toDocument.bind(this)).toArray()
+		return this.backend.find(filter).map<T>(this.toDocument.bind(this)).toArray()
 	}
 	async create(document: T): Promise<T>
 	async create(documents: T[]): Promise<T[]>
 	async create(documents: T | T[]): Promise<T | T[]> {
 		let result: T | T[]
 		if (Array.isArray(documents)) {
-			const r = await (await this.backend).insertMany(documents.map(this.fromDocument.bind(this)))
-			result = await ((await this.backend).find({ _id: { $in: Object.values(r.insertedIds) } })).map(d => this.toDocument(d)).toArray()
+			const r = await this.backend.insertMany(documents.map(this.fromDocument.bind(this)))
+			result = await (this.backend.find({ _id: { $in: Object.values(r.insertedIds) } })).map(d => this.toDocument(d)).toArray()
 		} else {
-			const r = await (await this.backend).insertOne(this.fromDocument(documents))
-			result = this.toDocument(await (await this.backend).find(r.insertedId).next() || undefined)
+			const r = await this.backend.insertOne(this.fromDocument(documents))
+			result = this.toDocument(await this.backend.find(r.insertedId).next() || undefined)
 		}
 		return result
 	}
@@ -58,7 +58,7 @@ export class Collection<T extends Document> {
 				update.$push = push
 			if (Object.entries(set).length > 0)
 				update.$set = set
-			const updated = await (await this.backend).findOneAndUpdate(filter, update, { returnOriginal: false })
+			const updated = await this.backend.findOneAndUpdate(filter, update, { returnOriginal: false })
 			result = updated.ok ? this.toDocument(updated.value) : undefined
 		}
 		return result
