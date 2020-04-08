@@ -53,7 +53,7 @@
  },
  "dependencies": {
   "@types/mongodb": "^3.3.16",
-  "authly": "0.0.35",
+  "authly": "0.0.37",
   "mongodb": "^3.5.3",
   "mongodb-memory-server": "^6.2.4"
  },
