@@ -40,7 +40,7 @@ export class Collection<T extends Document> {
 				let output = { ...documents, id: found.id }
 				if (this.shard && condition.hasOwnProperty(this.shard) && typeof (condition as any)[this.shard] == "string") {
 					const shard = (condition as any)[this.shard]
-					output = { ...output, shard }
+					output = { ...output, [this.shard]: shard }
 				}
 				return output
 			}).toArray()))).filter(output => output != undefined)
