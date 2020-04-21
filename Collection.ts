@@ -31,11 +31,23 @@ export class Collection<T extends Document> {
 		return result
 	}
 	async update(document: Partial<T> & Document): Promise<T | undefined>
+	async update(document: Partial<T>, condition: object): Promise<T[]>
 	async update(documents: (Partial<T> & Document)[]): Promise<T[]>
-	async update(documents: Partial<T> & Document | (Partial<T> & Document)[]): Promise<T | undefined | T[]> {
+	async update(documents: Partial<T> | Partial<T> & Document | (Partial<T> & Document)[], condition?: object): Promise<T | undefined | T[]>{
 		let result: T | undefined | T[]
-		if (Array.isArray(documents))
+		if (!Array.isArray(documents) && !Document.is(documents) && condition)
+			result = (await Promise.all(await this.update(await this.backend.find(condition).map(found => this.toDocument(found)).map(found => {
+				let output = { ...documents, id: found.id }
+				if (this.shard && condition.hasOwnProperty(this.shard) && typeof (condition as any)[this.shard] == "string") {
+					const shard = (condition as any)[this.shard]
+					output = { ...output, shard }
+				}
+				return output
+			}).toArray()))).filter(output => output != undefined)
+		else if (Array.isArray(documents))
 			result = (await Promise.all(documents.map(document => this.update(document)))).filter(r => r != undefined) as T[]
+		else if (!Document.is(documents))
+			result = undefined
 		else {
 			const filter: { _id: mongo.ObjectID, [property: string]: string | undefined | mongo.ObjectID } = this.fromDocument({ id: documents.id })
 			delete documents.id
@@ -45,21 +57,26 @@ export class Collection<T extends Document> {
 			}
 			const push: { [field: string]: { $each: any[] } } = {}
 			const set: { [field: string]: any } = {}
+			const unset: { [field: string]: any } = {}
 			for (const field in documents)
 				if (documents.hasOwnProperty(field)) {
 					const value = (documents as { [field: string]: any | any[] })[field]
 					if (Array.isArray(value))
 						push[field] = { $each: value }
-					else
+					else if (value)
 						set[field] = value
+					else
+						unset[field] = ""
 				}
-			const update: { $push?: { [field: string]: { $each: any[] } }, $set?: { [field: string]: any } } = {}
+			const update: { $push?: { [field: string]: { $each: any[] } }, $set?: { [field: string]: any }, $unset?: { [field: string]: any } } = {}
 			if (Object.entries(push).length > 0)
 				update.$push = push
 			if (Object.entries(set).length > 0)
 				update.$set = set
+			if (Object.entries(unset).length > 0)
+				update.$unset = unset
 			const updated = await this.backend.findOneAndUpdate(filter, update, { returnOriginal: false })
-			result = updated.ok ? this.toDocument(updated.value) : undefined
+			result = updated.ok && updated.value ? this.toDocument(updated.value) : undefined
 		}
 		return result
 	}
