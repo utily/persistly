@@ -3,7 +3,7 @@ import { Condition as FilterCondition } from "./Condition"
 import { Document } from "../Document"
 
 export type Filter<T> = {
-	[P in keyof T]?: FilterCondition<T[P]> | Filter<T[P]>
+	[P in keyof T]?: FilterCondition<T[P]> | Filter<T[P]> | any
 }
 // tslint:disable: no-shadowed-variable
 export namespace Filter {

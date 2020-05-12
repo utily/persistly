@@ -1,7 +1,7 @@
 import * as authly from "authly"
 import * as persistly from "./index"
 
-type Type = { id: authly.Identifier, name: string, shard: string, added?: boolean, data?: string[] }
+type Type = { id: authly.Identifier, name: string, shard: string, added?: boolean, data?: string[], remove?: string }
 
 describe("Collection", () => {
 	const connection = persistly.TestConnection.create()
@@ -79,20 +79,20 @@ describe("Collection", () => {
 	})
 	it("update range", async () => {
 		await collection!.create([
-			{ id: "upr0", name: "not updated 00", shard: "update-range" },
-			{ id: "upr1", name: "not updated 01", shard: "update-range" },
-			{ id: "upr2", name: "not updated 02", shard: "update-range" },
-			{ id: "upr3", name: "not updated 03", shard: "update-range" },
+			{ id: "upr0", name: "not updated 00", shard: "update-range", remove: "old" },
+			{ id: "upr1", name: "not updated 01", shard: "update-range", remove: "old" },
+			{ id: "upr2", name: "not updated 02", shard: "update-range", remove: "old" },
+			{ id: "upr3", name: "not updated 03", shard: "update-range", remove: "old" },
 		])
-		const query: persistly.Filter<Type> & persistly.Update<Type> = { shard: "update-range", name: { $gt: "not updated 00", $lt: "not updated 03", $set: "updated" }, added: true }
+		const query: persistly.Filter<Type> & persistly.Update<Type> = { shard: "update-range", name: { $gt: "not updated 00", $lt: "not updated 03", $set: "updated" }, added: true, remove: { $unset: true } }
 		const updated = await collection!.update(query)
 		const result = await collection!.list({ shard: "update-range" })
 		expect(updated).toEqual(2)
 		expect(result).toEqual([
-			{ id: "upr0", shard: "update-range", name: "not updated 00" },
+			{ id: "upr0", shard: "update-range", name: "not updated 00", remove: "old" },
 			{ id: "upr1", shard: "update-range", name: "updated", added: true },
 			{ id: "upr2", shard: "update-range", name: "updated", added: true },
-			{ id: "upr3", shard: "update-range", name: "not updated 03" },
+			{ id: "upr3", shard: "update-range", name: "not updated 03", remove: "old" },
 		])
 	})
 	it("update one array", async () => {
