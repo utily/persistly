@@ -1,12 +1,14 @@
 import * as authly from "authly"
-import * as persistly from "./"
+import * as persistly from "./index"
+
+type Type = { id: authly.Identifier, name: string, shard: string, added?: boolean, data?: string[] }
 
 describe("Collection", () => {
 	const connection = persistly.TestConnection.create()
-	let collection: persistly.Collection<{ id: authly.Identifier, name: string, shard: string, added?: boolean, data?: string[] }> | undefined
+	let collection: persistly.Collection<Type> | undefined
 
 	beforeAll(async () => {
-		collection = await connection.get<{ id: authly.Identifier, name: string, shard: string, added?: boolean, data?: string[] }>("data", "shard", 4)
+		collection = await connection.get<Type>("data", "shard", 4)
 		await collection!.create([
 			{ id: "id01", name: "first", shard: "a" },
 			{ id: "id02", name: "second", shard: "b" },
@@ -46,6 +48,10 @@ describe("Collection", () => {
 		const second = await collection!.list({ shard: "a" })
 		expect(second).toEqual([{ id: "id01", name: "first", shard: "a" }, { id: "id03", name: "third", shard: "a" }])
 	})
+	it("list many by filter", async () => {
+		const second = await collection!.list({ shard: "a", name: { $gt: "great" } })
+		expect(second).toEqual([{ id: "id03", name: "third", shard: "a" }])
+	})
 	it("update one", async () => {
 		await collection!.create({ id: "upda", name: "not updated", shard: "update" })
 		const updated = await collection!.update({ id: "upda", shard: "update", name: "updated" })
@@ -69,6 +75,24 @@ describe("Collection", () => {
 			{ id: "up02", shard: "update", name: "updated 02", added: true },
 			{ id: "up03", shard: "update", name: "updated 03", added: true },
 			{ id: "up04", shard: "update", name: "updated 04", added: true },
+		])
+	})
+	it("update range", async () => {
+		await collection!.create([
+			{ id: "upr0", name: "not updated 00", shard: "update-range" },
+			{ id: "upr1", name: "not updated 01", shard: "update-range" },
+			{ id: "upr2", name: "not updated 02", shard: "update-range" },
+			{ id: "upr3", name: "not updated 03", shard: "update-range" },
+		])
+		const query: persistly.Filter<Type> & persistly.Update<Type> = { shard: "update-range", name: { $gt: "not updated 00", $lt: "not updated 03", $set: "updated" }, added: true }
+		const updated = await collection!.update(query)
+		const result = await collection!.list({ shard: "update-range" })
+		expect(updated).toEqual(2)
+		expect(result).toEqual([
+			{ id: "upr0", shard: "update-range", name: "not updated 00" },
+			{ id: "upr1", shard: "update-range", name: "updated", added: true },
+			{ id: "upr2", shard: "update-range", name: "updated", added: true },
+			{ id: "upr3", shard: "update-range", name: "not updated 03" },
 		])
 	})
 	it("update one array", async () => {
