@@ -44,10 +44,12 @@ export class Collection<T extends Document> {
 			const update: { $push?: { [field: string]: { $each: any[] } }, $set?: { [field: string]: any } } = Update.toMongo(documents, "id", this.shard)
 			if (filter._id) {
 				const updated = await this.backend.findOneAndUpdate(filter, update, { returnOriginal: false })
-				result = updated.ok ? this.toDocument(updated.value) : undefined	
+				result = updated.ok ? this.toDocument(updated.value) : undefined
 			} else {
-				const updated = await this.backend.updateMany(filter, update, {})
-				result = updated.modifiedCount
+				const shard = this.shard
+				result = shard && !filter[shard] // Workaround for CosmosDB:s lack of support for updateMany across shards, slow
+					? (await Promise.all([...new Set(await this.backend.find(filter).map(d => d[shard]).toArray())].map(async s => (await this.backend.updateMany(filter, update, {})).matchedCount))).reduce((r, c) => r + c, 0)
+					: (await this.backend.updateMany(filter, update, {})).modifiedCount
 			}
 		}
 		return result
@@ -72,7 +74,7 @@ export class Collection<T extends Document> {
 	private fromDocument(document: Partial<Document>): any {
 		const result: any = { ...document }
 		if (document.id)
-			result["_id"] = new mongo.ObjectID(this.toBase16(document.id))
+			result._id = new mongo.ObjectID(this.toBase16(document.id))
 		delete(result.id)
 		return result
 	}
