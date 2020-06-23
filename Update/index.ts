@@ -13,7 +13,7 @@ export namespace Update {
 		return query
 	}
 	export function toMongo<T>(update: Update<T>, ...suppress: (string | undefined)[]): mongo.UpdateQuery<T> {
-		let result: mongo.UpdateQuery<T> = {}
+		const result: mongo.UpdateQuery<T> = {}
 		for (const field in update)
 			if (update.hasOwnProperty(field) && !suppress.some(s => s == field)) {
 				const value = update[field]
