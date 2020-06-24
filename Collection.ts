@@ -48,7 +48,11 @@ export class Collection<T extends Document> {
 			} else {
 				const shard = this.shard
 				result = shard && !filter[shard] // Workaround for CosmosDB:s lack of support for updateMany across shards, slow
-					? (await Promise.all([...new Set(await this.backend.find(filter).map(d => d[shard]).toArray())].map(async s => (await this.backend.updateMany(filter, update, {})).matchedCount))).reduce((r, c) => r + c, 0)
+					? (await Promise.all([...new Set(await this.backend.find(filter).map(d => d[shard]).toArray())].map(async s => {
+						const f = {...filter}
+						f[shard] = s
+						return (await this.backend.updateMany(f, update, {})).matchedCount
+					}))).reduce((r, c) => r + c, 0)
 					: (await this.backend.updateMany(filter, update, {})).modifiedCount
 			}
 		}

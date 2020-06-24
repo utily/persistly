@@ -95,6 +95,40 @@ describe("Collection", () => {
 			{ id: "upr3", shard: "update-range", name: "not updated 03", remove: "old" },
 		])
 	})
+	it("update range, no shard", async () => {
+		await collection!.create([
+			{ id: "urb0", name: "v2: not updated 00", shard: "update-range2-a", remove: "old" },
+			{ id: "urb1", name: "v2: not updated 01", shard: "update-range2-a", remove: "old" },
+			{ id: "urb2", name: "v2: not updated 02", shard: "update-range2-a", remove: "old" },
+			{ id: "urb3", name: "v2: not updated 03", shard: "update-range2-a", remove: "old" },
+			{ id: "urb4", name: "v2: not updated 00", shard: "update-range2-b", remove: "old" },
+			{ id: "urb5", name: "v2: not updated 01", shard: "update-range2-b", remove: "old" },
+			{ id: "urb6", name: "v2: not updated 02", shard: "update-range2-b", remove: "old" },
+			{ id: "urb7", name: "v2: not updated 03", shard: "update-range2-b", remove: "old" },
+			{ id: "urb8", name: "v2: not updated 00", shard: "update-range2-b" },
+			{ id: "urb9", name: "v2: not updated 01", shard: "update-range2-b" },
+			{ id: "urba", name: "v2: not updated 02", shard: "update-range2-b" },
+			{ id: "urbb", name: "v2: not updated 03", shard: "update-range2-b" },
+		])
+		const query: persistly.Filter<Type> & persistly.Update<Type> = { name: { $gt: "v2: not updated 00", $lt: "v2: not updated 03", $set: "v2: updated" }, added: true, remove: { $isset: true, $unset: true } }
+		const updated = await collection!.update(query)
+		const result = (await collection!.list({ shard: "update-range2-a" })).concat(await collection!.list({ shard: "update-range2-b" }))
+		expect(updated).toEqual(6)
+		expect(result).toEqual([
+			{ id: "urb0", shard: "update-range2-a", name: "v2: not updated 00", remove: "old" },
+			{ id: "urb1", shard: "update-range2-a", name: "v2: updated", added: true },
+			{ id: "urb2", shard: "update-range2-a", name: "v2: updated", added: true },
+			{ id: "urb3", shard: "update-range2-a", name: "v2: not updated 03", remove: "old" },
+			{ id: "urb4", shard: "update-range2-b", name: "v2: not updated 00", remove: "old" },
+			{ id: "urb5", shard: "update-range2-b", name: "v2: updated", added: true },
+			{ id: "urb6", shard: "update-range2-b", name: "v2: updated", added: true },
+			{ id: "urb7", shard: "update-range2-b", name: "v2: not updated 03", remove: "old" },
+			{ id: "urb8", shard: "update-range2-b", name: "v2: not updated 00" },
+			{ id: "urb9", shard: "update-range2-b", name: "v2: updated", added: true },
+			{ id: "urba", shard: "update-range2-b", name: "v2: updated", added: true },
+			{ id: "urbb", shard: "update-range2-b", name: "v2: not updated 03" },
+		])
+	})
 	it("update one array", async () => {
 		await collection!.create({ id: "upar", name: "not updated", shard: "update", data: [ "created" ] })
 		const updated = await collection!.update({ id: "upar", shard: "update", data: [ "updated"] })
