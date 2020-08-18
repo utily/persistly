@@ -7,9 +7,15 @@ export class Connection {
 	private readonly database: Promise<Mongo.Db | undefined>
 	protected constructor(url: Promise<string>, database?: Promise<string>) {
 		this.client = url.then(u => Mongo.MongoClient.connect(u, { useNewUrlParser: true })).catch(() => undefined)
-		this.database = this.client.then(async c => c ? c.db(database ? await database : undefined) : undefined).catch(() => undefined)
+		this.database = this.client
+			.then(async c => (c ? c.db(database ? await database : undefined) : undefined))
+			.catch(() => undefined)
 	}
-	async get<T extends Document>(name: string, shard?: string, idLength: 4 | 8 | 12 | 16 = 16): Promise<Collection<T> | undefined> {
+	async get<T extends Document>(
+		name: string,
+		shard?: string,
+		idLength: 4 | 8 | 12 | 16 = 16
+	): Promise<Collection<T> | undefined> {
 		const database = await this.database
 		return database ? new Collection<T>(database.collection(name), shard, idLength) : undefined
 	}

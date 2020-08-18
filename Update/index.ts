@@ -4,9 +4,14 @@ import { Action as UpdateAction } from "./Action"
 export type Update<T> = {
 	[P in keyof T]?: UpdateAction<T[P]> | Update<T[P]> | any
 }
-// tslint:disable: no-shadowed-variable
+
 export namespace Update {
-	function update<T>(query: mongo.UpdateQuery<T>, operation: UpdateAction.Operator, field: string, value: any): mongo.UpdateQuery<T> {
+	function update<T>(
+		query: mongo.UpdateQuery<T>,
+		operation: UpdateAction.Operator,
+		field: string,
+		value: any
+	): mongo.UpdateQuery<T> {
 		const r: { [f: string]: any } = query[operation] ?? {}
 		r[field] = value
 		query[operation] = r as any
@@ -15,7 +20,7 @@ export namespace Update {
 	export function toMongo<T>(update: Update<T>, ...suppress: (string | undefined)[]): mongo.UpdateQuery<T> {
 		const result: mongo.UpdateQuery<T> = {}
 		for (const field in update)
-			if (update.hasOwnProperty(field) && !suppress.some(s => s == field)) {
+			if (Object.prototype.hasOwnProperty.call(update, field) && !suppress.some(s => s == field)) {
 				const value = update[field]
 				toMongoUpdate(result, field, value)
 			}
@@ -28,7 +33,7 @@ export namespace Update {
 			update(query, "$set", prefix, value)
 		else
 			for (const field in value) {
-				if (value.hasOwnProperty(field)) {
+				if (Object.prototype.hasOwnProperty.call(value, field)) {
 					const v = value[field]
 					if (UpdateAction.Operator.is(field))
 						update(query, field, prefix, v)
@@ -40,7 +45,7 @@ export namespace Update {
 	export function extract<T>(update: Update<T>): Update<T> {
 		const result: Update<T> = {}
 		for (const field in update)
-			if (update.hasOwnProperty(field)) {
+			if (Object.prototype.hasOwnProperty.call(update, field)) {
 				const value = UpdateAction.extract(update[field])
 				if (value != undefined)
 					result[field] = value

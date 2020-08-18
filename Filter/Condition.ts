@@ -13,34 +13,35 @@ export type Condition<T> = {
 
 export namespace Condition {
 	export function is(value: any | Condition<any>): value is Condition<any> {
-		return typeof value == "object" && (
-			value.$eq != undefined ||
-			value.$gt != undefined ||
-			value.$gte != undefined ||
-			value.$in != undefined ||
-			value.$lt != undefined ||
-			value.$lte != undefined ||
-			value.$ne != undefined ||
-			value.$nin != undefined
+		return (
+			typeof value == "object" &&
+			(value.$eq != undefined ||
+				value.$gt != undefined ||
+				value.$gte != undefined ||
+				value.$in != undefined ||
+				value.$lt != undefined ||
+				value.$lte != undefined ||
+				value.$ne != undefined ||
+				value.$nin != undefined)
 		)
 	}
 	export function toMongo<T>(condition: Condition<T>): mongo.QuerySelector<T> | any {
 		let result: mongo.QuerySelector<T> | any = {}
-		if (condition.hasOwnProperty("$eq"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$eq"))
 			result = condition.$eq
-		if (condition.hasOwnProperty("$gt"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$gt"))
 			result.$gt = condition.$gt
-		if (condition.hasOwnProperty("$gte"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$gte"))
 			result.$gte = condition.$gte
-		if (condition.hasOwnProperty("$in"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$in"))
 			result.$in = condition.$in
-		if (condition.hasOwnProperty("$lt"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$lt"))
 			result.$lt = condition.$lt
-		if (condition.hasOwnProperty("$lte"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$lte"))
 			result.$lte = condition.$lte
-		if (condition.hasOwnProperty("$ne"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$ne"))
 			result.$ne = condition.$ne
-		if (condition.hasOwnProperty("$nin"))
+		if (Object.prototype.hasOwnProperty.call(condition, "$nin"))
 			result.$nin = condition.$nin
 		return result
 	}

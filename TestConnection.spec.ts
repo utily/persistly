@@ -8,7 +8,7 @@ describe("TestConnection", () => {
 	})
 	it("get", async () => {
 		const connection = TestConnection.create()
-		const collection = connection.get<{ id: string, name: string }>("data", "id")
+		const collection = connection.get<{ id: string; name: string }>("data", "id")
 		expect(collection).toBeTruthy()
 		await connection.close()
 	})

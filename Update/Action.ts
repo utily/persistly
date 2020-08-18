@@ -6,10 +6,8 @@ export type Action<T> = {
 
 export namespace Action {
 	export function is(value: any | Action<any>): value is Action<any> {
-		return typeof value == "object" && (
-			value.$set != undefined ||
-			value.$unset != undefined ||
-			value.$push != undefined
+		return (
+			typeof value == "object" && (value.$set != undefined || value.$unset != undefined || value.$push != undefined)
 		)
 	}
 	export type Operator = "$set" | "$unset" | "$push"
