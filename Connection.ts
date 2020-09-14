@@ -11,13 +11,13 @@ export class Connection {
 			.then(async c => (c ? c.db(database ? await database : undefined) : undefined))
 			.catch(() => undefined)
 	}
-	async get<T extends Document>(
+	async get<T extends Document, Shard extends keyof T & string>(
 		name: string,
-		shard?: string,
+		shard: Shard,
 		idLength: 4 | 8 | 12 | 16 = 16
-	): Promise<Collection<T> | undefined> {
+	): Promise<Collection<T, Shard> | undefined> {
 		const database = await this.database
-		return database ? new Collection<T>(database.collection(name), shard, idLength) : undefined
+		return database ? new Collection<T, Shard>(database.collection(name), shard, idLength) : undefined
 	}
 	async close(): Promise<void> {
 		const client = await this.client

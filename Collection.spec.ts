@@ -5,10 +5,10 @@ type Type = { id: authly.Identifier; name: string; shard: string; added?: boolea
 
 describe("Collection", () => {
 	const connection = persistly.TestConnection.create()
-	let collection: persistly.Collection<Type> | undefined
+	let collection: persistly.Collection<Type, "shard"> | undefined
 
 	beforeAll(async () => {
-		collection = await connection.get<Type>("data", "shard", 4)
+		collection = await connection.get<Type, "shard">("data", "shard", 4)
 		if (collection) {
 			await collection.create([
 				{ id: "id01", name: "first", shard: "a" },
@@ -186,5 +186,48 @@ describe("Collection", () => {
 			expect(updated).toEqual({ id: "upar", name: "not updated", shard: "update", data: ["created", "updated"] })
 		}
 	})
+	//Insert testing of Callbacks
+	it("update one, testing callback", async () => {
+		if (collection) {
+			await collection.create({ id: "updb", name: "not updated", shard: "update" })
+			const mockCallback = jest.fn()
+			collection.updated.listen(mockCallback)
+			const updated = await collection.update({ id: "updb", shard: "update", name: "updated" })
+			expect(updated).toEqual({ id: "updb", name: "updated", shard: "update" })
+			expect(mockCallback.mock.calls.length).toBe(1)
+			expect(mockCallback.mock.calls[0][0]).toEqual(["update"])
+		}
+	})
+	// Callback testing multiple update
+	it("update multiple callback testing", async () => {
+		if (collection) {
+			const mockCallback = jest.fn()
+			collection.updated.listen(mockCallback)
+
+			await collection.create([
+				{ id: "mul1", name: "not updated 01", shard: "update" },
+				{ id: "mul2", name: "not updated 02", shard: "update" },
+				{ id: "mul3", name: "not updated 03", shard: "update" },
+				{ id: "mul4", name: "not updated 04", shard: "update1" },
+			])
+			expect(mockCallback.mock.calls.length).toBe(1)
+			expect(mockCallback.mock.calls[0][0]).toEqual(["update", "update1"])
+			const updated = await collection.update([
+				{ id: "mul1", shard: "update", name: "updated 01", added: true },
+				{ id: "mul2", shard: "update", name: "updated 02", added: true },
+				{ id: "mul3", shard: "update", name: "updated 03", added: true },
+				{ id: "mul4", shard: "update1", name: "updated 04", added: true },
+			])
+			expect(mockCallback.mock.calls.length).toBe(2)
+			expect(mockCallback.mock.calls[1][0]).toEqual(["update", "update1"])
+			expect(updated).toEqual([
+				{ id: "mul1", shard: "update", name: "updated 01", added: true },
+				{ id: "mul2", shard: "update", name: "updated 02", added: true },
+				{ id: "mul3", shard: "update", name: "updated 03", added: true },
+				{ id: "mul4", shard: "update1", name: "updated 04", added: true },
+			])
+		}
+	})
+
 	afterAll(() => connection.close())
 })
