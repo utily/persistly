@@ -10,7 +10,7 @@ describe("Connection", () => {
 		if (db) {
 			const connection = persistly.Connection.open(db)
 			expect(connection).toBeTruthy()
-			const merchant = await connection.get<{ id: string } & any>("merchant", "id", 4)
+			const merchant = await connection.get<{ id: string } & any, "id">("merchant", "id", 4)
 			expect(merchant).toBeTruthy()
 			await connection.close()
 		}
