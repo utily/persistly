@@ -40,8 +40,6 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		return result
 	}
 
-	// TODO Implement callbacks
-
 	private async deleteHelper(document: Filter<T> & Document): Promise<[T[Shard][], T | undefined]>
 	private async deleteHelper(document: Filter<T>): Promise<[T[Shard][], T | number | undefined]>
 	private async deleteHelper(document: Filter<T> & Document): Promise<[T[Shard][], T | number | undefined]> {
