@@ -39,6 +39,50 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		}
 		return result
 	}
+
+	async delete(document: Filter<T> & Update<T> & Document): Promise<T | undefined>
+	async delete(document: Filter<T> & Update<T>): Promise<T | number | undefined>
+	async delete(documents: (Filter<T> & Update<T> & Document)[]): Promise<T[]>
+	async delete(documents: (Filter<T> & Update<T>) | (Filter<T> & Update<T>)[]): Promise<T | number | undefined | T[]> {
+		let result: T | number | undefined | T[]
+		if (Array.isArray(documents)) {
+			result = (await Promise.all(documents.map(document => this.delete(document)))).reduce(
+				(r, c) => (Document.is(c) ? [...r, c] : r),
+				[]
+			)
+		} else {
+			const filter: {
+				_id?: mongo.ObjectID
+				[property: string]: string | undefined | mongo.ObjectID
+			} = this.fromDocument(Filter.toMongo(documents, "id", this.shard))
+			if (filter._id) {
+				const deleted = await this.backend.findOneAndDelete(filter)
+				result = deleted.ok ? this.toDocument(deleted.value) : undefined
+			} else {
+				//Workaround for same problem as in updateHelper with CosmosDB:s lack of support for updateMany applies to deleteMany, slow
+				result = !filter[this.shard]
+					? (
+							await Promise.all(
+								[
+									...new Set(
+										await this.backend
+											.find(filter)
+											.map(d => d[this.shard])
+											.toArray()
+									),
+								].map(async s => {
+									const f = { ...filter }
+									f[this.shard] = s
+									return (await this.backend.deleteMany(f)).deletedCount
+								})
+							)
+					  ).reduce((r, c) => (c && r ? r + c : r), 0)
+					: (await this.backend.deleteMany(filter)).deletedCount
+			}
+		}
+		return result
+	}
+
 	private async updateHelper(document: Filter<T> & Update<T> & Document): Promise<[T[Shard][], T | undefined]>
 	private async updateHelper(document: Filter<T> & Update<T>): Promise<[T[Shard][], T | number | undefined]>
 	private async updateHelper(

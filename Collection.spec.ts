@@ -228,6 +228,74 @@ describe("Collection", () => {
 			])
 		}
 	})
+	it("delete one", async () => {
+		if (collection) {
+			await collection.create({ id: "dele", name: "not deleted", shard: "deleter" })
+			const deleted = await collection.delete({ id: "dele", name: "not deleted", shard: "deleter" })
+			expect(deleted).toEqual({ id: "dele", name: "not deleted", shard: "deleter" })
+		}
+	})
+
+	it("delete range", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "del0", name: "not deleted 00", shard: "range" },
+				{ id: "del1", name: "not deleted 01", shard: "range" },
+				{ id: "del2", name: "not deleted 02", shard: "range" },
+				{ id: "del3", name: "not deleted 03", shard: "range" },
+			])
+
+			const query: persistly.Filter<Type> & persistly.Update<Type> = {
+				shard: "range",
+				name: { $gt: "not deleted 00", $lt: "not deleted 03" },
+			}
+			const deleted = await collection.delete(query)
+			const result = await collection.list({ shard: "range" })
+			expect(deleted).toEqual(2)
+			expect(result).toEqual([
+				{ id: "del0", shard: "range", name: "not deleted 00" },
+				{ id: "del3", shard: "range", name: "not deleted 03" },
+			])
+		}
+	})
+	it("delete from shard", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "dle0", name: "not deleted 1", shard: "deletee" },
+				{ id: "dle1", name: "not deleted 2", shard: "deletee" },
+				{ id: "dle2", name: "not deleted 3", shard: "deletee" },
+				{ id: "dle3", name: "not deleted 4", shard: "deletee" },
+				{ id: "dle4", name: "not deleted 5", shard: "deletee" },
+				{ id: "dle5", name: "not deleted 6", shard: "deletee" },
+				{ id: "dle6", name: "not deleted 7", shard: "deletee" },
+				{ id: "dle7", name: "not deleted 8", shard: "deletee" },
+			])
+
+			const deleted = await collection.delete({ shard: "deletee" })
+			const result = await collection.list({ shard: "deletee" })
+			expect(deleted).toEqual(8)
+			expect(result).toEqual([])
+		}
+	})
+
+	it("delete many", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "de11", name: "not deleted 01", shard: "dele" },
+				{ id: "de12", name: "not deleted 02", shard: "dele" },
+			])
+			const deleted = await collection.delete([
+				{ id: "de11", name: "not deleted 01", shard: "dele" },
+				{ id: "de12", name: "not deleted 02", shard: "dele" },
+			])
+			const result = await collection.list({ shard: "dele" })
+			expect(result).toEqual([])
+			expect(deleted).toEqual([
+				{ id: "de11", name: "not deleted 01", shard: "dele" },
+				{ id: "de12", name: "not deleted 02", shard: "dele" },
+			])
+		}
+	})
 
 	afterAll(() => connection.close())
 })
