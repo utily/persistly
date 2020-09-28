@@ -281,19 +281,37 @@ describe("Collection", () => {
 	it("delete many", async () => {
 		if (collection) {
 			await collection.create([
-				{ id: "de11", name: "not deleted 01", shard: "dele" },
-				{ id: "de12", name: "not deleted 02", shard: "dele" },
+				{ id: "de11", name: "not deleted 01", shard: "delet" },
+				{ id: "de12", name: "not deleted 02", shard: "delet" },
 			])
 			const deleted = await collection.delete([
-				{ id: "de11", name: "not deleted 01", shard: "dele" },
-				{ id: "de12", name: "not deleted 02", shard: "dele" },
+				{ id: "de11", name: "not deleted 01", shard: "delet" },
+				{ id: "de12", name: "not deleted 02", shard: "delet" },
 			])
-			const result = await collection.list({ shard: "dele" })
+			const result = await collection.list({ shard: "delet" })
 			expect(result).toEqual([])
 			expect(deleted).toEqual([
-				{ id: "de11", name: "not deleted 01", shard: "dele" },
-				{ id: "de12", name: "not deleted 02", shard: "dele" },
+				{ id: "de11", name: "not deleted 01", shard: "delet" },
+				{ id: "de12", name: "not deleted 02", shard: "delet" },
 			])
+		}
+	})
+	it("delete with in", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "dee0", name: "something", shard: "dele" },
+				{ id: "dee1", name: "something", shard: "dele1" },
+				{ id: "dee2", name: "something", shard: "dele2" },
+				{ id: "dee3", name: "something", shard: "dele3" },
+				{ id: "dee4", name: "something", shard: "dele4" },
+				{ id: "dee5", name: "something", shard: "dele5" },
+				{ id: "dee6", name: "something", shard: "dele6" },
+			])
+			const shards = ["dele", "dele1", "dele2", "dele3", "dele4", "dele5"]
+			const deleted = await collection.delete({ shard: { $in: shards } })
+			const result = await collection.list({ shard: { $in: shards } })
+			expect(result).toEqual([])
+			expect(deleted).toEqual(6)
 		}
 	})
 

@@ -25,14 +25,17 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	async create(documents: T[]): Promise<T[]>
 	async create(documents: T | T[]): Promise<T | T[]> {
 		let result: T | T[]
-		if (Array.isArray(documents)) {
-			const r = await this.backend.insertMany(documents.map(this.fromDocument.bind(this)))
-			result = await this.backend
-				.find({ _id: { $in: Object.values(r.insertedIds) } })
-				.map(d => this.toDocument(d))
-				.toArray()
-			this.updated.invoke([...new Set(result.map(d => d[this.shard]))])
-		} else {
+		if (Array.isArray(documents))
+			if (documents.length > 0) {
+				const r = await this.backend.insertMany(documents.map(this.fromDocument.bind(this)))
+				result = await this.backend
+					.find({ _id: { $in: Object.values(r.insertedIds) } })
+					.map(d => this.toDocument(d))
+					.toArray()
+				this.updated.invoke([...new Set(result.map(d => d[this.shard]))])
+			} else
+				result = []
+		else {
 			const r = await this.backend.insertOne(this.fromDocument(documents))
 			result = this.toDocument((await this.backend.find(r.insertedId).next()) || undefined)
 			this.updated.invoke([result[this.shard]])
@@ -82,16 +85,19 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	async delete(documents: Filter<T> | Filter<T>[]): Promise<T | number | undefined | T[]> {
 		let result: [T[Shard][], T | number | undefined | T[]]
 		if (Array.isArray(documents))
-			result = (await Promise.all(documents.map(document => this.deleteHelper(document)))).reduce<[T[Shard][], T[]]>(
-				(r, c) =>
-					Document.is(c[1])
-						? [
-								[...r[0], ...c[0]],
-								[...r[1], c[1]],
-						  ]
-						: r,
-				[[], []]
-			)
+			if (documents.length > 0)
+				result = (await Promise.all(documents.map(document => this.deleteHelper(document)))).reduce<[T[Shard][], T[]]>(
+					(r, c) =>
+						Document.is(c[1])
+							? [
+									[...r[0], ...c[0]],
+									[...r[1], c[1]],
+							  ]
+							: r,
+					[[], []]
+				)
+			else
+				result = [[], []]
 		else
 			result = await this.deleteHelper(documents)
 		if (result[0])
@@ -149,16 +155,19 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	async update(documents: (Filter<T> & Update<T>) | (Filter<T> & Update<T>)[]): Promise<T | number | undefined | T[]> {
 		let result: [T[Shard][], T | undefined | T[] | number]
 		if (Array.isArray(documents))
-			result = (await Promise.all(documents.map(document => this.updateHelper(document)))).reduce<[T[Shard][], T[]]>(
-				(r, c) =>
-					Document.is(c[1])
-						? [
-								[...r[0], ...c[0]],
-								[...r[1], c[1]],
-						  ]
-						: r,
-				[[], []]
-			)
+			if (documents.length > 0)
+				result = (await Promise.all(documents.map(document => this.updateHelper(document)))).reduce<[T[Shard][], T[]]>(
+					(r, c) =>
+						Document.is(c[1])
+							? [
+									[...r[0], ...c[0]],
+									[...r[1], c[1]],
+							  ]
+							: r,
+					[[], []]
+				)
+			else
+				result = [[], []]
 		else
 			result = await this.updateHelper(documents)
 		if (result[0])
@@ -177,7 +186,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		let result: T | undefined
 		if (document) {
 			const id = this.toBase64(document._id)
-			delete document._id
+			delete (document as { _id?: mongo.ObjectID })._id
 			result = { ...document, id } as any
 		}
 		return result
