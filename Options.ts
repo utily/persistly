@@ -34,7 +34,7 @@ export namespace Options {
 	export function keyToMongo(field: keyof Options): string {
 		return field.slice(1)
 	}
-	export function extractOptions(filter: Filter<any>): Record<string, unknown> | undefined {
+	export function extractOptions(filter: Filter<any>): Record<string, unknown> {
 		const result: Record<string, unknown> = {}
 		for (const option in filter)
 			if (isKey(option) && filter[option]) {
