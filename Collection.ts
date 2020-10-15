@@ -2,6 +2,7 @@ import * as mongo from "mongodb"
 import * as authly from "authly"
 import { Document } from "./Document"
 import { Filter } from "./Filter"
+import { Options } from "./Options"
 import { Update } from "./Update"
 import { Event } from "./Event"
 
@@ -105,13 +106,14 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		return result[1]
 	}
 
-	private async updateHelper(document: Filter<T> & Update<T> & Document): Promise<[T[Shard][], T | undefined]>
+	private async updateHelper(document: Filter<T> & Update<T> & Options & Document): Promise<[T[Shard][], T | undefined]>
 	private async updateHelper(document: Filter<T> & Update<T>): Promise<[T[Shard][], T | number | undefined]>
 	private async updateHelper(
-		document: Filter<T> & Update<T> & Document
+		document: Filter<T> & Update<T> & Options & Document
 	): Promise<[T[Shard][], T | number | undefined]> {
 		let result: T | number | undefined
 		let shards: T[Shard][] | undefined
+		const options = Options.extractOptions(document)
 		const filter: {
 			_id?: mongo.ObjectID
 			[property: string]: string | undefined | mongo.ObjectID
@@ -122,7 +124,10 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 			this.shard
 		)
 		if (filter._id) {
-			const updated = await this.backend.findOneAndUpdate(filter, update, { returnOriginal: false })
+			const updated = await this.backend.findOneAndUpdate(filter, update, {
+				returnOriginal: false,
+				...options,
+			})
 			result = updated.ok ? this.toDocument(updated.value) : undefined
 			if (result)
 				shards = [result[this.shard]]
@@ -140,19 +145,21 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 							].map(async s => {
 								const f = { ...filter }
 								f[this.shard] = s
-								return [s, (await this.backend.updateMany(f, update, {})).matchedCount]
+								return [s, (await this.backend.updateMany(f, update, { ...options })).matchedCount]
 							})
 						)
 				  ).reduce((r, c) => [[...r[0], c[1]], r[1] + c[1]], [[], 0])
-				: [[filter[this.shard]], (await this.backend.updateMany(filter, update, {})).modifiedCount]
+				: [[filter[this.shard]], (await this.backend.updateMany(filter, update, { ...options })).modifiedCount]
 		}
 		return [shards ?? [], result]
 	}
 
-	async update(document: Filter<T> & Update<T> & Document): Promise<T | undefined>
+	async update(document: Filter<T> & Update<T> & Options & Document): Promise<T | undefined>
 	async update(document: Filter<T> & Update<T>): Promise<T | number | undefined>
-	async update(documents: (Filter<T> & Update<T> & Document)[]): Promise<T[]>
-	async update(documents: (Filter<T> & Update<T>) | (Filter<T> & Update<T>)[]): Promise<T | number | undefined | T[]> {
+	async update(documents: (Filter<T> & Update<T> & Options & Document)[]): Promise<T[]>
+	async update(
+		documents: (Filter<T> & Update<T> & Options) | (Filter<T> & Update<T> & Options)[]
+	): Promise<T | number | undefined | T[]> {
 		let result: [T[Shard][], T | undefined | T[] | number]
 		if (Array.isArray(documents))
 			if (documents.length > 0)
