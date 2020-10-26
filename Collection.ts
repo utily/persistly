@@ -106,6 +106,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		return result[1]
 	}
 
+	private async updateHelper(document: Filter<T> & Update<T> & Document): Promise<[T[Shard][], T | undefined]>
 	private async updateHelper(document: Filter<T> & Update<T> & Options & Document): Promise<[T[Shard][], T | undefined]>
 	private async updateHelper(document: Filter<T> & Update<T>): Promise<[T[Shard][], T | number | undefined]>
 	private async updateHelper(
@@ -155,6 +156,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	}
 
 	async update(document: Filter<T> & Update<T> & Options & Document): Promise<T | undefined>
+	async update(document: Filter<T> & Update<T> & Document): Promise<T | undefined>
 	async update(document: Filter<T> & Update<T>): Promise<T | number | undefined>
 	async update(documents: (Filter<T> & Update<T> & Options & Document)[]): Promise<T[]>
 	async update(
