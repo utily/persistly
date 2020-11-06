@@ -20,7 +20,7 @@ describe("persistly", () => {
 			id: "ab01",
 			shard: "shard01",
 			filter: 42,
-			field: { nested: 42 },
+			"field.nested": 42,
 			range: { $gt: 42, $lte: 1337 },
 		})
 		const update = persistly.Update.toMongo(argument, "id", "shard")

@@ -13,11 +13,13 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		this.hexadecmialIdLength = (idLength * 3) / 2
 	}
 	async get(filter: Filter<T>): Promise<T | undefined> {
+		filter = Filter.toMongo(filter ?? {}, "*")
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
 		return this.toDocument(await this.backend.findOne(filter))
 	}
 	async list(filter?: Filter<T>): Promise<T[]> {
+		filter = Filter.toMongo(filter ?? {}, "*")
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
 		return this.backend.find(filter).map<T>(this.toDocument.bind(this)).toArray()

@@ -1,7 +1,16 @@
 import * as authly from "authly"
 import * as persistly from "./index"
 
-type Type = { id: authly.Identifier; name: string; shard: string; added?: boolean; data?: string[]; remove?: string }
+type Type = {
+	id: authly.Identifier
+	name: string
+	shard: string
+	added?: boolean
+	data?: string[]
+	remove?: string
+	number?: number
+	nested?: { partial?: string; required: string }
+}
 
 describe("Collection", () => {
 	const connection = persistly.TestConnection.create()
@@ -312,6 +321,43 @@ describe("Collection", () => {
 			const result = await collection.list({ shard: { $in: shards } })
 			expect(result).toEqual([])
 			expect(deleted).toEqual(6)
+		}
+	})
+	it("Condition in list", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "num0", name: "something", shard: "dele", number: 0 },
+				{ id: "num1", name: "something", shard: "dele", number: 1 },
+				{ id: "num2", name: "something", shard: "dele", number: 2 },
+				{ id: "num3", name: "something", shard: "dele", number: 3 },
+				{ id: "num4", name: "something", shard: "dele", number: 4 },
+				{ id: "num5", name: "something", shard: "dele", number: 5 },
+				{ id: "num6", name: "something", shard: "dele", number: 6 },
+			])
+			const result = await collection.list({ number: { $gt: 4 } })
+			expect(result).toEqual([
+				{ id: "num5", name: "something", shard: "dele", number: 5 },
+				{ id: "num6", name: "something", shard: "dele", number: 6 },
+			])
+		}
+	})
+	it("Partial condition in list & get", async () => {
+		if (collection) {
+			await collection.create([
+				{ id: "show", name: "something", shard: "1234", nested: { required: "test", partial: "test" } },
+				{ id: "chow", name: "something", shard: "1234", nested: { required: "test" } },
+			])
+			const list = await collection.list({ nested: { partial: "test" } })
+			expect(list).toEqual([
+				{ id: "show", name: "something", shard: "1234", nested: { required: "test", partial: "test" } },
+			])
+			const fetch = await collection.get({ nested: { partial: "test" } })
+			expect(fetch).toEqual({
+				id: "show",
+				name: "something",
+				shard: "1234",
+				nested: { required: "test", partial: "test" },
+			})
 		}
 	})
 
