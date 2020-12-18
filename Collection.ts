@@ -1,10 +1,10 @@
-import * as mongo from "mongodb"
 import * as authly from "authly"
+import * as mongo from "mongodb"
 import { Document } from "./Document"
+import { Event } from "./Event"
 import { Filter } from "./Filter"
 import { Options } from "./Options"
 import { Update } from "./Update"
-import { Event } from "./Event"
 
 export class Collection<T extends Document, Shard extends keyof T & string> {
 	private hexadecmialIdLength: number

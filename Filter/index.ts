@@ -1,6 +1,6 @@
 import * as mongo from "mongodb"
-import { Condition as FilterCondition } from "./Condition"
 import { Document } from "../Document"
+import { Condition as FilterCondition } from "./Condition"
 
 export type Filter<T> = {
 	[P in keyof T]?: FilterCondition<T[P]> | Filter<DeepPartial<T[P]>> | any
