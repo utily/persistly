@@ -32,4 +32,14 @@ describe("Update", () => {
 			$addToSet: { event: [1, 2] },
 		})
 	})
+	it("testRemoval", () => {
+		const argument: persistly.Update<{ name: string; field: number; property: { nested: number }; remove: number }> = {
+			name: "test",
+			field: { $set: null },
+			property: { nested: null },
+			remove: { $unset: true },
+		}
+		const filter = persistly.Update.toMongo(argument)
+		expect(filter).toEqual({ $set: { name: "test" }, $unset: { remove: true } })
+	})
 })
