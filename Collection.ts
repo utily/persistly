@@ -185,6 +185,11 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 			this.updated.invoke([...new Set(result[0])])
 		return result[1]
 	}
+
+	async getDistinct(field: string): Promise<any[]> {
+		return await this.backend.distinct(field)
+	}
+
 	private toBase64(id: mongo.ObjectID): authly.Identifier {
 		return authly.Identifier.fromHexadecimal(id.toHexString().slice(24 - this.hexadecmialIdLength))
 	}
