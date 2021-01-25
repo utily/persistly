@@ -171,7 +171,7 @@ describe("Collection", () => {
 			const result = (await collection.list({ shard: "update-range2-a" })).concat(
 				await collection.list({ shard: "update-range2-b" })
 			)
-			expect(updated).toEqual(6)
+			expect(updated).toEqual(4)
 			expect(result).toEqual([
 				{ id: "urb0", shard: "update-range2-a", name: "v2: not updated 00", remove: "old" },
 				{ id: "urb1", shard: "update-range2-a", name: "v2: updated", added: true },
@@ -182,8 +182,8 @@ describe("Collection", () => {
 				{ id: "urb6", shard: "update-range2-b", name: "v2: updated", added: true },
 				{ id: "urb7", shard: "update-range2-b", name: "v2: not updated 03", remove: "old" },
 				{ id: "urb8", shard: "update-range2-b", name: "v2: not updated 00" },
-				{ id: "urb9", shard: "update-range2-b", name: "v2: updated", added: true },
-				{ id: "urba", shard: "update-range2-b", name: "v2: updated", added: true },
+				{ id: "urb9", shard: "update-range2-b", name: "v2: not updated 01" },
+				{ id: "urba", shard: "update-range2-b", name: "v2: not updated 02" },
 				{ id: "urbb", shard: "update-range2-b", name: "v2: not updated 03" },
 			])
 		}

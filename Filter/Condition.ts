@@ -9,6 +9,7 @@ export type Condition<T> = {
 	$lte?: T
 	$ne?: T
 	$nin?: T[]
+	$isset?: boolean
 }
 
 export namespace Condition {
@@ -22,6 +23,7 @@ export namespace Condition {
 				value.$lt != undefined ||
 				value.$lte != undefined ||
 				value.$ne != undefined ||
+				value.$isset != undefined ||
 				value.$nin != undefined)
 		)
 	}
@@ -43,6 +45,8 @@ export namespace Condition {
 			result.$ne = condition.$ne
 		if (Object.prototype.hasOwnProperty.call(condition, "$nin"))
 			result.$nin = condition.$nin
+		if (Object.prototype.hasOwnProperty.call(condition, "$isset"))
+			result.$exists = condition.$isset
 		return result
 	}
 	export function extract<T>(condition: Condition<T> | any): Condition<T> | undefined {
@@ -64,6 +68,8 @@ export namespace Condition {
 				result.$ne = condition.$ne
 			if ("$nin" in condition)
 				result.$nin = condition.$nin
+			if ("$isset" in condition)
+				result.$isset = condition.$isset
 		}
 		return result
 	}

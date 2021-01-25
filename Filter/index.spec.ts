@@ -38,4 +38,19 @@ describe("Filter", () => {
 			"some.nested": "test",
 		})
 	})
+	it("Test isset", () => {
+		const testing = {
+			id: "ab01",
+			field: { nested: { $eq: 42 } },
+			something: { $isset: true },
+		}
+		const filter = persistly.Filter.toMongo(testing, "id")
+		expect(filter).toEqual({
+			"field.nested": 42,
+			id: "ab01",
+			something: {
+				$exists: true,
+			},
+		})
+	})
 })
