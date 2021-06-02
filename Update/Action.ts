@@ -22,7 +22,7 @@ export namespace Action {
 		const result: Action<T> | undefined = is(action) ? {} : undefined
 		if (result) {
 			if ("$set" in action)
-				result.$set = action.$set
+				result.$set = clear(action.$set)
 			if ("$unset" in action)
 				result.$unset = action.$unset
 			if ("$push" in action)
@@ -32,4 +32,16 @@ export namespace Action {
 		}
 		return result
 	}
+}
+function clear(value: any): any {
+	if (Array.isArray(value))
+		value = value.filter(v => v != undefined && v != null).map(clear)
+	else if (value && typeof value == "object")
+		for (const entry of Object.entries(value)) {
+			if (entry[1] == undefined || entry[1] == null)
+				delete value[entry[0]]
+			else if (typeof entry[1] == "object")
+				value[entry[0]] = clear(entry[1])
+		}
+	return value
 }

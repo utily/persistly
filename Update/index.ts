@@ -47,7 +47,7 @@ export namespace Update {
 		for (const field in update)
 			if (Object.prototype.hasOwnProperty.call(update, field)) {
 				const value = UpdateAction.extract(update[field])
-				if (value != undefined)
+				if (value != undefined && value != null)
 					result[field] = value
 			}
 		return result
