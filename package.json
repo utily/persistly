@@ -56,9 +56,9 @@
 		"@types/mongodb": "^3.5.20",
 		"authly": "0.0.40",
 		"eslint-plugin-prettierx": "github:nilssonemma/eslint-plugin-prettierx#master",
-		"prettierx": "github:simonmika/prettierx#newline-before-clause",
 		"mongodb": "^3.5.8",
-		"mongodb-memory-server": "^6.6.1"
+		"mongodb-memory-server": "^6.6.1",
+		"prettierx": "github:simonmika/prettierx#newline-before-clause"
 	},
 	"devDependencies": {
 		"@types/jest": "^26.0.0",

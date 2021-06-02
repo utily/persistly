@@ -26,9 +26,9 @@ export namespace Action {
 			if ("$unset" in action)
 				result.$unset = action.$unset
 			if ("$push" in action)
-				result.$push = action.$push
+				result.$push = clear(action.$push)
 			if ("$addToSet" in action)
-				result.$addToSet = action.$addToSet
+				result.$addToSet = clear(action.$addToSet)
 		}
 		return result
 	}
