@@ -24,7 +24,7 @@
 	"jest": {
 		"globals": {
 			"ts-jest": {
-				"tsConfig": "tsconfig.test.json"
+				"tsconfig": "tsconfig.test.json"
 			}
 		},
 		"testEnvironment": "node",
@@ -54,11 +54,9 @@
 	},
 	"dependencies": {
 		"@types/mongodb": "^3.5.20",
-		"authly": "0.0.40",
-		"eslint-plugin-prettierx": "github:nilssonemma/eslint-plugin-prettierx#master",
+		"authly": "0.1.7",
 		"mongodb": "^3.5.8",
-		"mongodb-memory-server": "^6.6.1",
-		"prettierx": "github:simonmika/prettierx#newline-before-clause"
+		"mongodb-memory-server": "^6.6.1"
 	},
 	"devDependencies": {
 		"@types/jest": "^26.0.0",
@@ -68,8 +66,10 @@
 		"babel-core": "^6.26.3",
 		"babel-jest": "^26.0.1",
 		"eslint": "^7.6.0",
+		"eslint-plugin-prettierx": "github:nilssonemma/eslint-plugin-prettierx#master",
 		"eslint-plugin-simple-import-sort": "^7.0.0",
 		"jest": "^26",
+		"prettierx": "github:simonmika/prettierx#newline-before-clause",
 		"ts-jest": "^26.1.0",
 		"typescript": "^3.9.5",
 		"watch": "^1.0.2"
