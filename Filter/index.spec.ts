@@ -53,4 +53,8 @@ describe("Filter", () => {
 			},
 		})
 	})
+	it("elemMatch", () => {
+		const test = { array: { $elemMatch: { created: { $gt: 2 } } } }
+		expect(persistly.Filter.toMongo(test, "*")).toEqual({ array: { $elemMatch: { created: { $gt: 2 } } } })
+	})
 })

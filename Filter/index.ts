@@ -37,7 +37,7 @@ function toDotNotation(value: Record<string, any>): Record<string, any> {
 	for (const key of Object.keys(value)) {
 		if (!Array.isArray(value[key]) && typeof value[key] == "object")
 			Object.entries(toDotNotation(value[key])).forEach(entry =>
-				entry[0].charAt(0) == "$"
+				entry[0].charAt(0) == "$" || key.charAt(0) == "$"
 					? (result[key] = { ...result[key], [entry[0]]: entry[1] })
 					: (result[key + "." + entry[0]] = entry[1])
 			)
