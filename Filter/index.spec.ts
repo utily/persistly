@@ -13,6 +13,12 @@ describe("Filter", () => {
 		const test = { id: "id02" }
 		expect(persistly.Filter.toMongo(test, "*")).toEqual({ id: "id02" })
 	})
+	it("elemMatch", () => {
+		const test = { array: { $elemMatch: { created: { $gt: "2021-11-21" } } } }
+		expect(persistly.Filter.toMongo(test, "id")).toEqual("")
+	})
+
+	
 	it("toMongo", () => {
 		const argument = {
 			id: "ab01",

@@ -10,6 +10,7 @@ export type Condition<T> = {
 	$ne?: T
 	$nin?: T[]
 	$isset?: boolean
+	$elemMatch?: T[]
 }
 
 export namespace Condition {
@@ -24,7 +25,8 @@ export namespace Condition {
 				value.$lte != undefined ||
 				value.$ne != undefined ||
 				value.$isset != undefined ||
-				value.$nin != undefined)
+				value.$nin != undefined ||
+				value.$elemMatch != undefined)
 		)
 	}
 	export function toMongo<T>(condition: Condition<T>): mongo.QuerySelector<T> | any {
@@ -47,6 +49,8 @@ export namespace Condition {
 			result.$nin = condition.$nin
 		if (Object.prototype.hasOwnProperty.call(condition, "$isset"))
 			result.$exists = condition.$isset
+		if (Object.prototype.hasOwnProperty.call(condition, "$elemMatch"))
+			result.$elemMatch = condition.$elemMatch
 		return result
 	}
 	export function extract<T>(condition: Condition<T> | any): Condition<T> | undefined {
@@ -70,6 +74,8 @@ export namespace Condition {
 				result.$nin = condition.$nin
 			if ("$isset" in condition)
 				result.$isset = condition.$isset
+			if ("$elemMatch" in condition)
+				result.$elemMatch = condition.$elemMatch
 		}
 		return result
 	}
