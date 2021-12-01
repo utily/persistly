@@ -57,4 +57,17 @@ describe("Filter", () => {
 		const test = { array: { $elemMatch: { created: { $gt: 2 } } } }
 		expect(persistly.Filter.toMongo(test, "*")).toEqual({ array: { $elemMatch: { created: { $gt: 2 } } } })
 	})
+
+	it("test nested operators2", () => {
+		const test = {
+			id: "test",
+			merchant: "testing",
+			event: { $set: [{ a: 2 }, { b: 3, c: 5 }] },
+		}
+		expect(persistly.Filter.toMongo(test, "*")).toEqual({
+			event: { "$set.0.a": 2, "$set.1.b": 3, "$set.1.c": 5 },
+			id: "test",
+			merchant: "testing",
+		})
+	})
 })
