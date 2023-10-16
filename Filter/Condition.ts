@@ -29,8 +29,8 @@ export namespace Condition {
 				value.$elemMatch != undefined)
 		)
 	}
-	export function toMongo<T>(condition: Condition<T>): mongo.QuerySelector<T> | any {
-		let result: mongo.QuerySelector<T> | any = {}
+	export function toMongo<T>(condition: Condition<T>): mongo.FilterOperators<T> | any {
+		let result: mongo.FilterOperators<T> | any = {}
 		if (Object.prototype.hasOwnProperty.call(condition, "$eq"))
 			result = condition.$eq
 		if (Object.prototype.hasOwnProperty.call(condition, "$gt"))

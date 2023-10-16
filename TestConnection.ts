@@ -3,13 +3,15 @@ import { Connection } from "./Connection"
 
 export class TestConnection extends Connection {
 	constructor(private server: MongoMemoryServer) {
-		super(server.getConnectionString())
+		super(server.getUri())
+
 	}
 	async close(): Promise<void> {
 		await super.close()
 		await this.server.stop()
 	}
-	static create(): TestConnection {
-		return new TestConnection(new MongoMemoryServer())
+	static async create(): Promise<TestConnection> {
+		const server = await MongoMemoryServer.create()
+		return new TestConnection(server)
 	}
 }
