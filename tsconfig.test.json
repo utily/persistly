@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
-		"target": "es2019",
-		"module": "CommonJS",
+		"target": "esnext",
+		"module": "esnext",
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
@@ -12,7 +12,7 @@
 		"noImplicitThis": true,
 		"strictNullChecks": true,
 		"sourceMap": true,
-		"outDir": "dist",
+		"outDir": "dist/mjs",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
 		"lib": [

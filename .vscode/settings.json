@@ -1,6 +1,7 @@
 {
 	"files.exclude": {
 		".*": true,
+		"*.sh": true,
 		"*.json": true,
 		"dist": true,
 		"README.md": true,
