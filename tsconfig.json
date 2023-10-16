@@ -4,9 +4,19 @@
 		"declaration": true,
 		"sourceMap": true,
 		"sourceRoot": "../",
-		"outDir": "dist"
+		"outDir": "dist",
+		"baseUrl": ".",
+		"paths": {
+			"*": [
+				"types/*"
+			]
+		},
+		"allowSyntheticDefaultImports": true,
+		"types": [
+			"node"
+		]
 	},
 	"files": [
-		"index.ts"
+		"index.ts",
 	]
 }

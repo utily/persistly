@@ -1,7 +1,10 @@
 {
 	"compilerOptions": {
-		"target": "es6",
-		"module": "commonjs",
+		"target": "es2019",
+		"module": "CommonJS",
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
 		"noImplicitAny": true,
 		"removeComments": true,
 		"preserveConstEnums": true,
@@ -12,17 +15,35 @@
 		"outDir": "dist",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
-		"plugins": [
-			{
-			"name": "typescript-tslint-plugin",
-			"alwaysShowRuleFailuresAsWarnings": false,
-			"ignoreDefinitionFiles": true,
-			"configFile": "tslint.json",
-			"suppressWhileTypeErrorsPresent": false,
-			"mockTypeScriptVersion": false
-			}
-		]
+		"lib": [
+			"es2019",
+			"webworker"
+		],
+		"types": [
+			"@cloudflare/workers-types",
+			"node",
+			"jest"
+		],
+		"paths": {
+			"*": [
+				"types/*"
+			]
+		}
 	},
+	"include": [
+		"*.ts",
+		"**/*.ts",
+		"./node_modules/@cloudflare/workers-types/index.d.ts"
+	],
+	"exclude": [
+		"*.spec.ts",
+		"**/*.spec.ts",
+		"node_modules/",
+		"dist/"
+	],
+	"files": [
+		"index.ts"
+	],
 	"typeAcquisition": {
 		"enable": true
 	}
