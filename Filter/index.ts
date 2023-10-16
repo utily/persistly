@@ -1,13 +1,14 @@
 import * as mongo from "mongodb"
-import { Document } from "../Document"
 import { Condition as FilterCondition } from "./Condition"
 
-export type Filter<T> = mongo.Filter<mongo.BSON.Document>
+export type Filter<T> = {
+	[P in keyof T]?: FilterCondition<T[P]> | Filter<DeepPartial<T[P]>> | any
+}
 export namespace Filter {
 	export function toMongo<T>(
 		filter: Filter<T>,
 		...prioritized: (string | undefined)[]
-	): mongo.FilterOperators<T> & Partial<Document> {
+	): mongo.Filter<mongo.BSON.Document> {
 		const result: any = {}
 		let field: keyof Filter<T>
 		for (field in filter)
