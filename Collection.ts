@@ -13,17 +13,17 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		this.hexadecmialIdLength = (idLength * 3) / 2
 	}
 	async get(filter: Filter<T>): Promise<T | undefined> {
-		filter = Filter.toMongo(filter ?? {}, "*")
-		if (Document.is(filter))
-			filter = this.fromDocument(filter)
-		return this.toDocument(await this.backend.findOne(filter))
+		let mongoFilter: mongo.Filter<mongo.BSON.Document> = Filter.toMongo(filter ?? {}, "*")
+		if (Document.is(mongoFilter))
+			mongoFilter = this.fromDocument(mongoFilter)
+		return this.toDocument(await this.backend.findOne(mongoFilter))
 	}
 	async list(filter?: Filter<T>): Promise<T[]> {
-		filter = Filter.toMongo(filter ?? {}, "*")
-		if (Document.is(filter))
-			filter = this.fromDocument(filter)
+		let mongoFilter = Filter.toMongo(filter ?? {}, "*")
+		if (Document.is(mongoFilter))
+			mongoFilter = this.fromDocument(mongoFilter)
 		return this.backend
-			.find(filter ?? {})
+			.find(mongoFilter ?? {})
 			.map<T>(this.toDocument.bind(this))
 			.toArray()
 	}
@@ -60,10 +60,9 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined]> {
 		let result: T | number | undefined
 		let shards: mongo.WithId<mongo.BSON.Document>[Shard][] | undefined
-		const filter: {
-			_id?: mongo.ObjectId
-			[property: string]: string | undefined | mongo.ObjectId
-		} = this.fromDocument(Filter.toMongo(document, "id", this.shard))
+		let filter = Filter.toMongo(document, "id", this.shard)
+		if (Document.is(filter))
+			filter = this.fromDocument(filter)
 		if (filter._id) {
 			const deleted = await this.backend.findOneAndDelete(filter)
 			result = deleted ? this.toDocument(deleted) : undefined
@@ -86,10 +85,10 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 								return [s, (await this.backend.deleteMany(f, {})).deletedCount]
 							})
 						)
-				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>((r, c) => [[...r[0], c[1]], r[1] + c[1]], [
-						[],
-						0,
-				  ])
+				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>(
+						(r, c) => [[...r[0], c[1]], r[1] + c[1]],
+						[[], 0]
+				  )
 				: [[filter[this.shard]], (await this.backend.deleteMany(filter, {})).deletedCount]
 		}
 		return [shards ?? [], result]
@@ -137,10 +136,9 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		let result: T | number | undefined
 		let shards: mongo.WithId<mongo.BSON.Document>[Shard][] | undefined
 		const options = Options.extractOptions(document)
-		const filter: {
-			_id?: mongo.ObjectId
-			[property: string]: string | undefined | mongo.ObjectId
-		} = this.fromDocument(Filter.toMongo(document, "id", this.shard))
+		let filter = Filter.toMongo(document, "id", this.shard)
+		if (Document.is(filter))
+			filter = this.fromDocument(filter)
 		const update: mongo.UpdateFilter<mongo.BSON.Document> = Update.toMongo(document, "id", this.shard)
 		if (filter._id) {
 			const updated = await this.backend.findOneAndUpdate(filter, update, {
@@ -167,10 +165,10 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 								return [s, (await this.backend.updateMany(f, update, { ...options })).matchedCount]
 							})
 						)
-				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>((r, c) => [[...r[0], c[1]], r[1] + c[1]], [
-						[],
-						0,
-				  ])
+				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>(
+						(r, c) => [[...r[0], c[1]], r[1] + c[1]],
+						[[], 0]
+				  )
 				: [[filter[this.shard]], (await this.backend.updateMany(filter, update, { ...options })).modifiedCount]
 		}
 		return [shards ?? [], result]

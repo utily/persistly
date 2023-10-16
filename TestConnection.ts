@@ -4,7 +4,6 @@ import { Connection } from "./Connection"
 export class TestConnection extends Connection {
 	constructor(private server: MongoMemoryServer) {
 		super(server.getUri())
-
 	}
 	async close(): Promise<void> {
 		await super.close()

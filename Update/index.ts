@@ -17,8 +17,11 @@ export namespace Update {
 		query[operation] = r as any
 		return query
 	}
-	export function toMongo<T>(update: Update<T>, ...suppress: (string | undefined)[]): mongo.UpdateFilter<T> {
-		const result: mongo.UpdateFilter<T> = {}
+	export function toMongo<T>(
+		update: Update<T>,
+		...suppress: (string | undefined)[]
+	): mongo.UpdateFilter<mongo.BSON.Document> {
+		const result: mongo.UpdateFilter<mongo.BSON.Document> = {}
 		for (const field in update)
 			if (Object.prototype.hasOwnProperty.call(update, field) && !suppress.some(s => s == field)) {
 				const value = update[field]
@@ -26,7 +29,7 @@ export namespace Update {
 			}
 		return result
 	}
-	function toMongoUpdate<T, P>(query: mongo.UpdateFilter<T>, prefix: string, value: any) {
+	function toMongoUpdate<T>(query: mongo.UpdateFilter<T>, prefix: string, value: any) {
 		if (Array.isArray(value))
 			update(query, "$push", prefix, { $each: value.filter(v => v != undefined) })
 		else if (typeof value != "object" && value != undefined)
