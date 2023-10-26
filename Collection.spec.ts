@@ -13,11 +13,10 @@ type Type = {
 }
 
 describe("Collection", () => {
-	let connection: persistly.TestConnection
+	const connection = persistly.TestConnection.create()
 	let collection: persistly.Collection<Type, "shard"> | undefined
 
 	beforeAll(async () => {
-		connection = await persistly.TestConnection.create()
 		collection = await connection.get<Type, "shard">("data", "shard", 4)
 		if (collection) {
 			await collection.create([
