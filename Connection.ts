@@ -5,8 +5,8 @@ import { Document } from "./Document"
 export class Connection {
 	private client: Promise<Mongo.MongoClient | undefined>
 	private readonly database: Promise<Mongo.Db | undefined>
-	protected constructor(url: string, database?: Promise<string>) {
-		this.client = Mongo.MongoClient.connect(url).catch(() => undefined)
+	protected constructor(url: Promise<string>, database?: Promise<string>) {
+		this.client = url.then(u => Mongo.MongoClient.connect(u).catch(() => undefined))
 		this.database = this.client
 			.then(async c => (c ? c.db(database ? await database : undefined) : undefined))
 			.catch(() => undefined)
@@ -25,6 +25,6 @@ export class Connection {
 			await client.close()
 	}
 	static open(url: string, database?: string): Connection {
-		return new Connection(url, database ? Promise.resolve(database) : undefined)
+		return new Connection(Promise.resolve(url), database ? Promise.resolve(database) : undefined)
 	}
 }

@@ -2,15 +2,14 @@ import { MongoMemoryServer } from "mongodb-memory-server"
 import { Connection } from "./Connection"
 
 export class TestConnection extends Connection {
-	constructor(private server: MongoMemoryServer) {
-		super(server.getUri())
+	constructor(private server: Promise<MongoMemoryServer>) {
+		super(server.then(s => s.getUri()))
 	}
 	async close(): Promise<void> {
 		await super.close()
-		await this.server.stop()
+		await (await this.server).stop()
 	}
-	static async create(): Promise<TestConnection> {
-		const server = await MongoMemoryServer.create()
-		return new TestConnection(server)
+	static create(): TestConnection {
+		return new TestConnection(MongoMemoryServer.create())
 	}
 }
