@@ -8,7 +8,7 @@ export namespace Filter {
 	export function toMongo<T>(
 		filter: Filter<T>,
 		...prioritized: (string | undefined)[]
-	): mongo.Filter<mongo.BSON.Document> {
+	): mongo.Filter<Record<string, any>> {
 		const result: any = {}
 		let field: keyof Filter<T>
 		for (field in filter)
