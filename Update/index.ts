@@ -20,8 +20,8 @@ export namespace Update {
 	export function toMongo<T>(
 		update: Update<T>,
 		...suppress: (string | undefined)[]
-	): mongo.UpdateFilter<mongo.BSON.Document> {
-		const result: mongo.UpdateFilter<mongo.BSON.Document> = {}
+	): mongo.UpdateFilter<Record<string, any>> {
+		const result: mongo.UpdateFilter<Record<string, any>> = {}
 		for (const field in update)
 			if (Object.prototype.hasOwnProperty.call(update, field) && !suppress.some(s => s == field)) {
 				const value = update[field]

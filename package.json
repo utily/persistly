@@ -72,7 +72,7 @@
 	},
 	"dependencies": {
 		"authly": "3.0.11",
-		"mongodb": "^6",
+		"mongodb": "^4.1",
 		"mongodb-memory-server": "^9"
 	},
 	"devDependencies": {

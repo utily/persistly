@@ -8,12 +8,12 @@ import { Update } from "./Update"
 
 export class Collection<T extends Document, Shard extends keyof T & string> {
 	private hexadecmialIdLength: number
-	readonly updated = new Event<mongo.WithId<mongo.BSON.Document>[Shard][]>()
+	readonly updated = new Event<mongo.WithId<Record<string, any>>[Shard][]>()
 	constructor(private backend: mongo.Collection, readonly shard: Shard, readonly idLength: 4 | 8 | 12 | 16 = 16) {
 		this.hexadecmialIdLength = (idLength * 3) / 2
 	}
 	async get(filter: Filter<T>): Promise<T | undefined> {
-		let mongoFilter: mongo.Filter<mongo.BSON.Document> = Filter.toMongo(filter ?? {}, "*")
+		let mongoFilter: mongo.Filter<Record<string, any>> = Filter.toMongo(filter ?? {}, "*")
 		if (Document.is(mongoFilter))
 			mongoFilter = this.fromDocument(mongoFilter)
 		return this.toDocument(await this.backend.findOne(mongoFilter))
@@ -51,21 +51,21 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 
 	private async deleteHelper(
 		document: Filter<T> & Document
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | undefined]>
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | undefined]>
 	private async deleteHelper(
 		document: Filter<T>
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined]>
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | number | undefined]>
 	private async deleteHelper(
 		document: Filter<T> & Document
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined]> {
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | number | undefined]> {
 		let result: T | number | undefined
-		let shards: mongo.WithId<mongo.BSON.Document>[Shard][] | undefined
+		let shards: mongo.WithId<Record<string, any>>[Shard][] | undefined
 		let filter = Filter.toMongo(document, "id", this.shard)
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
 		if (filter._id) {
 			const deleted = await this.backend.findOneAndDelete(filter)
-			result = deleted ? this.toDocument(deleted) : undefined
+			result = deleted.ok ? this.toDocument(deleted.value) : undefined
 			if (result)
 				shards = [result[this.shard]]
 		} else {
@@ -85,7 +85,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 								return [s, (await this.backend.deleteMany(f, {})).deletedCount]
 							})
 						)
-				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>(
+				  ).reduce<[mongo.WithId<Record<string, any>>[Shard][], number]>(
 						(r, c) => [[...r[0], c[1]], r[1] + c[1]],
 						[[], 0]
 				  )
@@ -97,11 +97,11 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	async delete(document: Filter<T>): Promise<T | number | undefined>
 	async delete(documents: (Filter<T> & Document)[]): Promise<T[]>
 	async delete(documents: Filter<T> | Filter<T>[]): Promise<T | number | undefined | T[]> {
-		let result: [mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined | T[]]
+		let result: [mongo.WithId<Record<string, any>>[Shard][], T | number | undefined | T[]]
 		if (Array.isArray(documents))
 			if (documents.length > 0)
 				result = (await Promise.all(documents.map(document => this.deleteHelper(document)))).reduce<
-					[mongo.WithId<mongo.BSON.Document>[Shard][], T[]]
+					[mongo.WithId<Record<string, any>>[Shard][], T[]]
 				>(
 					(r, c) =>
 						Document.is(c[1])
@@ -123,29 +123,29 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 
 	private async updateHelper(
 		document: Filter<T> & Update<T> & Document
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | undefined]>
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | undefined]>
 	private async updateHelper(
 		document: Filter<T> & Update<T> & Options & Document
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | undefined]>
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | undefined]>
 	private async updateHelper(
 		document: Filter<T> & Update<T>
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined]>
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | number | undefined]>
 	private async updateHelper(
 		document: Filter<T> & Update<T> & Options & Document
-	): Promise<[mongo.WithId<mongo.BSON.Document>[Shard][], T | number | undefined]> {
+	): Promise<[mongo.WithId<Record<string, any>>[Shard][], T | number | undefined]> {
 		let result: T | number | undefined
-		let shards: mongo.WithId<mongo.BSON.Document>[Shard][] | undefined
+		let shards: mongo.WithId<Record<string, any>>[Shard][] | undefined
 		const options = Options.extractOptions(document)
 		let filter = Filter.toMongo(document, "id", this.shard)
 		if (Document.is(filter))
 			filter = this.fromDocument(filter)
-		const update: mongo.UpdateFilter<mongo.BSON.Document> = Update.toMongo(document, "id", this.shard)
+		const update = Update.toMongo(document, "id", this.shard)
 		if (filter._id) {
 			const updated = await this.backend.findOneAndUpdate(filter, update, {
 				returnDocument: "after",
 				...options,
 			})
-			result = updated ? this.toDocument(updated) : undefined
+			result = updated.ok ? this.toDocument(updated.value) : undefined
 			if (result)
 				shards = [result[this.shard]]
 		} else {
@@ -165,7 +165,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 								return [s, (await this.backend.updateMany(f, update, { ...options })).matchedCount]
 							})
 						)
-				  ).reduce<[mongo.WithId<mongo.BSON.Document>[Shard][], number]>(
+				  ).reduce<[mongo.WithId<Record<string, any>>[Shard][], number]>(
 						(r, c) => [[...r[0], c[1]], r[1] + c[1]],
 						[[], 0]
 				  )
@@ -181,11 +181,11 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 	async update(
 		documents: (Filter<T> & Update<T> & Options) | (Filter<T> & Update<T> & Options)[]
 	): Promise<T | number | undefined | T[]> {
-		let result: [mongo.WithId<mongo.BSON.Document>[Shard][], T | undefined | T[] | number]
+		let result: [mongo.WithId<Record<string, any>>[Shard][], T | undefined | T[] | number]
 		if (Array.isArray(documents))
 			if (documents.length > 0)
 				result = (await Promise.all(documents.map(document => this.updateHelper(document)))).reduce<
-					[mongo.WithId<mongo.BSON.Document>[Shard][], T[]]
+					[mongo.WithId<Record<string, any>>[Shard][], T[]]
 				>(
 					(r, c) =>
 						Document.is(c[1])
@@ -227,7 +227,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		return result
 	}
 	private fromDocument(document: Partial<Document>) {
-		const result: Partial<Document> & { _id?: mongo.BSON.ObjectId } = { ...document }
+		const result: Partial<Document> & { _id?: mongo.ObjectId } = { ...document }
 		if (document.id)
 			result._id = new mongo.ObjectId(this.toBase16(document.id))
 		delete result.id
