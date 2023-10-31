@@ -16,7 +16,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		let mongoFilter: mongo.Filter<Record<string, any>> = Filter.toMongo(filter ?? {}, "*")
 		if (Document.is(mongoFilter))
 			mongoFilter = this.fromDocument(mongoFilter)
-		return this.toDocument(await this.backend.findOne(mongoFilter))
+		return this.toDocument((await this.backend.findOne(mongoFilter)) as { _id: mongo.ObjectId })
 	}
 	async list(filter?: Filter<T>): Promise<T[]> {
 		let mongoFilter = Filter.toMongo(filter ?? {}, "*")
@@ -36,14 +36,16 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 				const r = await this.backend.insertMany(documents.map(this.fromDocument.bind(this)))
 				result = await this.backend
 					.find({ _id: { $in: Object.values(r.insertedIds) } })
-					.map(d => this.toDocument(d))
+					.map(d => this.toDocument(d as { _id: mongo.ObjectId }))
 					.toArray()
 				this.updated.invoke([...new Set(result.map(d => d[this.shard]))])
 			} else
 				result = []
 		else {
 			const r = await this.backend.insertOne(this.fromDocument(documents))
-			result = this.toDocument((await this.backend.find(r.insertedId).next()) || undefined)
+			result = this.toDocument(
+				((await this.backend.find(r.insertedId).next()) || undefined) as { _id: mongo.ObjectId } | undefined
+			)
 			result && this.updated.invoke([result[this.shard]])
 		}
 		return result
@@ -65,7 +67,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 			filter = this.fromDocument(filter)
 		if (filter._id) {
 			const deleted = await this.backend.findOneAndDelete(filter)
-			result = deleted.ok ? this.toDocument(deleted.value) : undefined
+			result = deleted.ok ? this.toDocument(deleted.value as { _id: mongo.ObjectId }) : undefined
 			if (result)
 				shards = [result[this.shard]]
 		} else {
@@ -145,7 +147,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 				returnDocument: "after",
 				...options,
 			})
-			result = updated.ok ? this.toDocument(updated.value) : undefined
+			result = updated.ok ? this.toDocument(updated.value as { _id: mongo.ObjectId }) : undefined
 			if (result)
 				shards = [result[this.shard]]
 		} else {

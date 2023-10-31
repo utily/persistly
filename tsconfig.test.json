@@ -28,7 +28,8 @@
 			"*": [
 				"types/*"
 			]
-		}
+		},
+		"skipLibCheck": true
 	},
 	"include": [
 		"*.ts",
