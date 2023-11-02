@@ -10,6 +10,7 @@ type Type = {
 	remove?: string
 	number?: number
 	nested?: { partial?: string; required: string }
+	created?: string
 }
 
 describe("Collection", () => {
@@ -36,8 +37,13 @@ describe("Collection", () => {
 	})
 	it("create one", async () => {
 		if (collection) {
-			const created = await collection.create({ id: "crea", name: "created", shard: "create" })
-			expect(created).toEqual({ id: "crea", name: "created", shard: "create" })
+			const created = await collection.create({
+				id: "crea",
+				name: "created",
+				shard: "create",
+				created: "2023-11-01T07:24:36.97Z",
+			})
+			expect(created).toEqual({ id: "crea", name: "created", shard: "create", created: "2023-11-01T07:24:36.970Z" })
 		}
 	})
 	it("create many", async () => {
