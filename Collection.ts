@@ -3,6 +3,7 @@ import * as mongo from "mongodb"
 import { Document } from "./Document"
 import { Event } from "./Event"
 import { Filter } from "./Filter"
+import { fixTimestamps } from "./fixTimestamps"
 import { Options } from "./Options"
 import { Update } from "./Update"
 
@@ -222,7 +223,7 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		if (document) {
 			const id = this.toBase64(document._id)
 			delete (document as { _id?: mongo.ObjectId })._id
-			result = { ...document, id } as any
+			result = fixTimestamps({ ...document, id }) as any
 		}
 		return result
 	}
@@ -231,6 +232,6 @@ export class Collection<T extends Document, Shard extends keyof T & string> {
 		if (document.id)
 			result._id = new mongo.ObjectId(this.toBase16(document.id))
 		delete result.id
-		return result
+		return fixTimestamps(result)
 	}
 }
