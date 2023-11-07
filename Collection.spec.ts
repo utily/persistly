@@ -41,9 +41,8 @@ describe("Collection", () => {
 				id: "crea",
 				name: "created",
 				shard: "create",
-				created: "2023-11-01T07:24:36.97Z",
 			})
-			expect(created).toEqual({ id: "crea", name: "created", shard: "create", created: "2023-11-01T07:24:36.970Z" })
+			expect(created).toEqual({ id: "crea", name: "created", shard: "create" })
 		}
 	})
 	it("create many", async () => {
