@@ -2,15 +2,15 @@
 	"name": "persistly",
 	"version": "0.4.2",
 	"description": "Document based persistency layer on top of Azure Cosmos DB. ",
-	"author": "PayFunc",
+	"author": "Utily Contributors",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/payfunc/persistly"
+		"url": "git+https://github.com/utily/persistly"
 	},
 	"bugs": {
-		"url": "https://github.com/payfunc/persistly/issues"
+		"url": "https://github.com/utily/persistly/issues"
 	},
-	"homepage": "https://payfunc.com/open-source/persistly",
+	"homepage": "https://github.com/utily/persistly",
 	"license": "MIT",
 	"private": false,
 	"main": "dist/cjs/index.js",
